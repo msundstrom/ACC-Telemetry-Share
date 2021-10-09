@@ -1,0 +1,23 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+/client/desktop/.vs/*
+/client/desktop/ACCTelemetrySharing/bin/*
+/client/desktop/ACCTelemetrySharing/obj/*
+/client/web/node_modules
+/server/node_modules
+/server/.pnp
+/server/.pnp.js
+
+/server/coverage
+
+/server/build
+
+/**/.DS_Store
+/**/.env.local
+/**/.env.development.local
+/**/.env.test.local
+/**/.env.production.local
+
+/**/npm-debug.log*
+/**/yarn-debug.log*
+/**/yarn-error.log*
