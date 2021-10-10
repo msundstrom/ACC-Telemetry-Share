@@ -11,6 +11,7 @@ namespace ACCTelemetrySharing
     struct UpdateFactory
     {
         public static RealTimeUpdate createRealTimeUpdate(
+            string shortName,
             Graphics graphics, 
             Physics physics, 
             StaticInfo staticInfo
@@ -18,6 +19,7 @@ namespace ACCTelemetrySharing
         {
             return new RealTimeUpdate()
             {
+                shortName = shortName,
                 iCurrentTime = graphics.iCurrentTime,
                 iLastTime = graphics.iLastTime,
                 iBestTime = graphics.iBestTime,
@@ -42,6 +44,7 @@ namespace ACCTelemetrySharing
                 Brake = physics.Brake,
                 Clutch = physics.Clutch,
                 Gear = physics.Gear,
+                TyreCompound = graphics.TyreCompound,
                 BrakeTemp = physics.BrakeTemp,
                 tyreTemp = physics.tyreTemp,
                 padLife = physics.padLife,
@@ -65,9 +68,27 @@ namespace ACCTelemetrySharing
                 mfdTyrePressureRR = graphics.mfdTyrePressureRR,
                 currentTyreSet = graphics.currentTyreSet,
                 strategyTyreSet = graphics.strategyTyreSet,
+                CarDamage = physics.CarDamage,
+                suspensionDamage = physics.suspensionDamage,
                 Rpms = physics.Rpms,
                 isInPitLane = graphics.isInPitLane,
                 isInPit = graphics.isInPit,
+                completedLaps = graphics.completedLaps,
+            };
+        }
+
+        public static OnNewLapUpdate createNewLapUpdate(
+            string shortName,
+            LapUpdate lapUpdate,
+            StintUpdate stintUpdate
+            )
+        {
+            return new OnNewLapUpdate()
+            {
+                averageTyreTemp = lapUpdate.averageTemps().rawData(),
+                averageTyrePsi = lapUpdate.averagePressures().rawData(),
+                stintAverageLapTimeMs = stintUpdate.averageLapTimeMs(),
+                predictedPadWear = stintUpdate.predictedPadLife().rawData(),
             };
         }
     }
@@ -75,6 +96,9 @@ namespace ACCTelemetrySharing
     [Serializable]
     class RealTimeUpdate
     {
+        // origin
+        public string shortName;
+
         // times
         public int iCurrentTime;
         public int iLastTime;
@@ -108,6 +132,7 @@ namespace ACCTelemetrySharing
         public int Gear;
 
         // brakes & tyres
+        public String TyreCompound;
         public float[] BrakeTemp;
         public float[] tyreTemp;
         public float[] padLife;
@@ -138,42 +163,51 @@ namespace ACCTelemetrySharing
         public int currentTyreSet;
         public int strategyTyreSet;
 
+        // damage
+        public float[] CarDamage;
+        public float[] suspensionDamage;
+
         // misc
         public int Rpms;
         public int isInPitLane;
         public int isInPit;
+        public int completedLaps;
         //public float[] CarCoordinates;
     }
 
     [Serializable]
-    class LapUpdate
+    class OnNewLapUpdate
     {
+        public float[] averageTyreTemp;
+        public float[] averageTyrePsi;
+        public int stintAverageLapTimeMs;
+        public float[] predictedPadWear;
 
     }
 
-    [Serializable]
-    class IntermittantUpdate
-    {
-        public float TC;
-        public float Abs;
-        public float BrakeBias;
+    //[Serializable]
+    //class IntermittantUpdate
+    //{
+    //    public float TC;
+    //    public float Abs;
+    //    public float BrakeBias;
 
-        public int mfdTyreSet;
-        public float mfdFuelToAdd;
-        public float mfdTyrePressureLF;
-        public float mfdTyrePressureRF;
-        public float mfdTyrePressureLR;
-        public float mfdTyrePressureRR;
-        
-        public int currentTyreSet;
-        public int strategyTyreSet;
-    }
+    //    public int mfdTyreSet;
+    //    public float mfdFuelToAdd;
+    //    public float mfdTyrePressureLF;
+    //    public float mfdTyrePressureRF;
+    //    public float mfdTyrePressureLR;
+    //    public float mfdTyrePressureRR;
 
-    [Serializable]
-    class OnDemandUpdate
-    {
-        public float TC;
-        public float Abs;
-        public float BrakeBias;
-    }
+    //    public int currentTyreSet;
+    //    public int strategyTyreSet;
+    //}
+
+    //[Serializable]
+    //class OnDemandUpdate
+    //{
+    //    public float TC;
+    //    public float Abs;
+    //    public float BrakeBias;
+    //}
 }

@@ -5,10 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ACCTelemetrySharing"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="200" Width="185" ResizeMode="NoResize">
     <Grid>
-        <Button x:Name="testButton" Click="testButton_Click" Margin="640,39,0,0" Width="150" Height="50" Content="Connect" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-        <Label x:Name="connectionStatus" Margin="710,-390,0,0" Content="off" Height="24" HorizontalAlignment="Left"/>
-        <Label Margin="642,-390,0,0" Content="ACC Status" Height="24" HorizontalAlignment="Left"/>
+        <Label Margin="10,-130,0,0" Content="ACC Status" Height="24" HorizontalAlignment="Left"/>
+        <Label x:Name="connectionStatus" Margin="80,-130,0,0" Content="off" Height="24" HorizontalAlignment="Left"/>
+        <Label Margin="10,-100,0,0" Content="Server Status" Height="24" HorizontalAlignment="Left"/>
+        <Label x:Name="serverStatus" Margin="90,-100,0,0" Content="off" Height="24" HorizontalAlignment="Left"/>
+        <Label Content="Short name" Margin="10,-40,0,0" Height="24" HorizontalAlignment="Left"/>
+        <TextBox x:Name="shortNameTextBox" Margin="10,70,0,0" TextChanged="shortNameTextBox_onChange" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="120" MaxLength="3" CharacterCasing="Upper"/>
+        <Button x:Name="connectButton" Click="connectButton_Click" Margin="10,90,0,0" Width="150" Height="50" Content="Connect" HorizontalAlignment="Left"/>
     </Grid>
 </Window>

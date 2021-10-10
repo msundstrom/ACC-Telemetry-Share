@@ -1,37 +1,34 @@
 ﻿using SocketIOClient;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Diagnostics;
-using System.Windows.Shapes;
 using System.Timers;
 using AssettoCorsaSharedMemory;
 using Newtonsoft.Json;
 
 namespace ACCTelemetrySharing
 {
+    enum ConnectionState
+    {
+        DISCONNECTED,
+        CONNECTING,
+        CONNECTED
+    }
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
-        private SocketIO client = new SocketIO("http://localhost:3000/data");
+        private string API = "http://localhost:3000/data";
+        private SocketIO client;
         private Timer updateTimer = new Timer();
-        private Graphics lastUpdate = new Graphics();
         private AssettoCorsa sharedMemoryReader = new AssettoCorsa();
+        private string shortName { get; set; }
 
-        private Graphics oldGraphicsUpdate = new Graphics();
-        private Graphics currentGraphicsUpdate = new Graphics();
+        private RealTimeUpdate lastUpdate;
+        private LapUpdate currentLap;
+        private StintUpdate currentStint;
 
         public MainWindow()
         {
@@ -43,10 +40,10 @@ namespace ACCTelemetrySharing
 
             sharedMemoryReader.ConnectionStatusChanged += connectionStatusChanged;
 
-            //sharedMemoryReader.GameStatusChanged += gameStatusChanged;
-            //sharedMemoryReader.GraphicsUpdated += graphicsUpdated;
-
             sharedMemoryReader.Start();
+
+            updateConnectButton(ConnectionState.DISCONNECTED);
+            connectButton.IsEnabled = false;
         }
 
         void connectionStatusChanged(object sender, ConnectionStatusEventArgs e)
@@ -67,43 +64,43 @@ namespace ACCTelemetrySharing
             });
         }
 
-        void graphicsUpdated(object sender, GraphicsEventArgs e)
+        private void setupConnection()
         {
-            //Trace.WriteLine("GAME STATUS EVENT: " + e.GameStatus.ToString());
-            oldGraphicsUpdate = currentGraphicsUpdate;
-            currentGraphicsUpdate = e.Graphics;
-        }
-
-        async private void connect()
-        {
-            client.On("hi", response =>
-            {
-                // You can print the returned data first to decide what to do next.
-                // output: ["hi client"]
-                Console.WriteLine(response);
-
-                string text = response.GetValue<string>();
-
-                Trace.WriteLine(text);
-
-                // The socket.io server code looks like this:
-                // socket.emit('hi', 'hi client');
-            });
-
             client.OnConnected += (sender, e) =>
             {
                 Trace.WriteLine("Connected!");
+                updateConnectButton(ConnectionState.CONNECTED);
 
                 updateTimer.Start();
             };
 
-            await client.ConnectAsync();
+            client.OnDisconnected += (sender, e) =>
+            {
+                updateConnectButton(ConnectionState.DISCONNECTED);
+            };
         }
 
-        private void testButton_Click(object sender, RoutedEventArgs e)
+        private void updateConnectButton(ConnectionState state)
         {
-            connect();
-            Trace.WriteLine("Connecting...!");
+            this.Dispatcher.Invoke(() =>
+            {
+                switch (state)
+                {
+                    case ConnectionState.DISCONNECTED:
+                        connectButton.IsEnabled = true;
+                        connectButton.Content = "Connect";
+                        break;
+                    case ConnectionState.CONNECTING:
+                        connectButton.IsEnabled = false;
+                        connectButton.Content = "Connecting...";
+                        break;
+
+                    case ConnectionState.CONNECTED:
+                        connectButton.IsEnabled = true;
+                        connectButton.Content = "Disconnect";
+                        break;
+                }
+            });
         }
 
         async private void sendUpdate(object sender, EventArgs e)
@@ -116,12 +113,74 @@ namespace ACCTelemetrySharing
                     var physics = sharedMemoryReader.ReadPhysics();
                     var staticInfo = sharedMemoryReader.ReadStaticInfo();
 
-                    var update = UpdateFactory.createRealTimeUpdate(graphics, physics, staticInfo);
+                    if (lastUpdate.completedLaps < graphics.completedLaps)
+                    {
+                        // update stint
+                        currentStint.update(graphics, physics, staticInfo);
+                        var newLapUpdate = UpdateFactory.createNewLapUpdate(shortName, currentLap, currentStint);
+                        var newLapUpdateJson = JsonConvert.SerializeObject(newLapUpdate);
 
-                    var json = JsonConvert.SerializeObject(update);
-                    await client.EmitAsync("acc update", json);
+                        await client.EmitAsync("new-lap-update", newLapUpdateJson);
+
+                        // new lap
+                        currentLap = new LapUpdate(graphics.completedLaps);
+                    }
+
+                    if (lastUpdate.isInPitLane == 1 && graphics.isInPitLane == 0)
+                    {
+                        // new stint
+                        currentStint = new StintUpdate();
+                    }
+
+                    currentLap.update(graphics, physics, staticInfo);
+                    
+                    var realTimeUpdate = UpdateFactory.createRealTimeUpdate(
+                        shortName, 
+                        graphics, 
+                        physics, 
+                        staticInfo
+                    );
+
+                    var realTimeUpdateJson = JsonConvert.SerializeObject(realTimeUpdate);
+                    await client.EmitAsync("real-time-update", realTimeUpdateJson);
+                    lastUpdate = realTimeUpdate;
                 }
             });
+        }
+
+        /// ui callbacks
+        private async void connectButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (client != null && client.Connected)
+            {
+                updateTimer.Stop();
+
+                await client.DisconnectAsync();
+                client.Dispose();
+
+                Trace.WriteLine("Disconnected!");
+                updateConnectButton(ConnectionState.DISCONNECTED);
+            }
+            else if (client == null || client.Disconnected)
+            {
+                updateConnectButton(ConnectionState.CONNECTING);
+                client = new SocketIO(API);
+                setupConnection();
+                _ = client.ConnectAsync();
+                Trace.WriteLine("Connecting...!");
+            }
+        }
+
+        private void shortNameTextBox_onChange(object sender, EventArgs e)
+        {
+            shortName = shortNameTextBox.Text;
+            if (shortName == null)
+            {
+                connectButton.IsEnabled = false;
+                return;
+            }
+
+            connectButton.IsEnabled = shortName.Length == 3 ? true : false;
         }
     }
 }
