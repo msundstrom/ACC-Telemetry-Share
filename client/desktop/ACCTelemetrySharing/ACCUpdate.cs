@@ -85,6 +85,7 @@ namespace ACCTelemetrySharing
         {
             return new OnNewLapUpdate()
             {
+                shortName = shortName,
                 averageTyreTemp = lapUpdate.averageTemps().rawData(),
                 averageTyrePsi = lapUpdate.averagePressures().rawData(),
                 stintAverageLapTimeMs = stintUpdate.averageLapTimeMs(),
@@ -178,6 +179,7 @@ namespace ACCTelemetrySharing
     [Serializable]
     class OnNewLapUpdate
     {
+        public string shortName;
         public float[] averageTyreTemp;
         public float[] averageTyrePsi;
         public int stintAverageLapTimeMs;
