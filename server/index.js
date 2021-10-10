@@ -12,7 +12,8 @@ const io = new Server(server, {
     }
 });
 
-var values = { };
+var realTimeUpdate = { };
+var newLapUpdate = { };
 
 const dataSourceNameSpace = io.of("/data");
 const clientNameSpace = io.of('/view');
@@ -25,13 +26,21 @@ server.listen(3000, () => {
     console.log('listening on *:3000');
 });
 
+// from desktop client to server
 dataSourceNameSpace.on('connection', (socket) => {  
     console.log('a data source connected');
 
     
-    socket.on('acc update', (msg) => {
-        console.log(`UPDATE: ${JSON.stringify(msg, null, 3)}`)
-        values = msg;
+    socket.on('real-time-update', (msg) => {
+        console.log(`UPDATE: ${JSON.stringify(msg, null, 3)}`);
+        realTimeUpdate = msg;
+        clientNameSpace.emit('real-time-update', realTimeUpdate);
+    });
+
+    socket.on('new-lap-update', (msg) => {
+        console.log(`NEW LAP UPDATE: ${JSON.stringify(msg, null, 3)}`);
+        newLapUpdate = msg;
+        clientNameSpace.emit('new-lap-update', newLapUpdate);
     });
 
     socket.on('disconnect', () => {
@@ -39,6 +48,7 @@ dataSourceNameSpace.on('connection', (socket) => {
     });
 });
 
+// from server to web client
 clientNameSpace.on('connection', (socket) => {
     console.log('a web interface connected');
 
@@ -46,7 +56,3 @@ clientNameSpace.on('connection', (socket) => {
         console.log('a web interface disconnected');
     });
 });
-
-setInterval(() => {
-    clientNameSpace.emit('FromAPI', values);
-}, 100);
