@@ -1,4 +1,4 @@
-﻿using SocketIOClient;
+﻿
 using System;
 using System.Windows;
 using System.Diagnostics;
@@ -20,8 +20,7 @@ namespace ACCTelemetrySharing
     /// </summary>
     public partial class MainWindow : Window
     {
-        private string API = "http://localhost:3000/data";
-        private SocketIO client;
+        
         private Timer updateTimer = new Timer();
         private AssettoCorsa sharedMemoryReader = new AssettoCorsa();
         private string shortName { get; set; }
@@ -29,6 +28,8 @@ namespace ACCTelemetrySharing
         private RealTimeUpdate lastUpdate;
         private LapUpdate currentLap;
         private StintUpdate currentStint;
+
+        private ServerCommunicator serverComms = new ServerCommunicator();
 
         public MainWindow()
         {
@@ -66,18 +67,7 @@ namespace ACCTelemetrySharing
 
         private void setupConnection()
         {
-            client.OnConnected += (sender, e) =>
-            {
-                Trace.WriteLine("Connected!");
-                updateConnectButton(ConnectionState.CONNECTED);
-
-                updateTimer.Start();
-            };
-
-            client.OnDisconnected += (sender, e) =>
-            {
-                updateConnectButton(ConnectionState.DISCONNECTED);
-            };
+            
         }
 
         private void updateConnectButton(ConnectionState state)
@@ -103,9 +93,9 @@ namespace ACCTelemetrySharing
             });
         }
 
-        async private void sendUpdate(object sender, EventArgs e)
+        private void sendUpdate(object sender, EventArgs e)
         {
-            await this.Dispatcher.Invoke(async () =>
+            this.Dispatcher.Invoke(() =>
             {
                 if (sharedMemoryReader.IsRunning)
                 {
@@ -118,18 +108,21 @@ namespace ACCTelemetrySharing
                         // update stint
                         currentStint.update(graphics, physics, staticInfo);
                         var newLapUpdate = UpdateFactory.createNewLapUpdate(shortName, currentLap, currentStint);
-                        var newLapUpdateJson = JsonConvert.SerializeObject(newLapUpdate);
 
-                        await client.EmitAsync("new-lap-update", newLapUpdateJson);
+                        _ = serverComms.sendUpdate(newLapUpdate);
 
                         // new lap
                         currentLap = new LapUpdate(graphics.completedLaps);
                     }
+                    // pit in
+                    if (lastUpdate.isInPitLane == 0 && graphics.isInPitLane == 1) {
+                        _ = serverComms.sendUpdate(UpdateFactory.createPitInUpdate(shortName, graphics));
+                    }
 
+                    // pit out
                     if (lastUpdate.isInPitLane == 1 && graphics.isInPitLane == 0)
                     {
-                        // new stint
-                        currentStint = new StintUpdate();
+                        _ = serverComms.sendUpdate(UpdateFactory.createPitOutUpdate(shortName, graphics));
                     }
 
                     currentLap.update(graphics, physics, staticInfo);
@@ -141,8 +134,7 @@ namespace ACCTelemetrySharing
                         staticInfo
                     );
 
-                    var realTimeUpdateJson = JsonConvert.SerializeObject(realTimeUpdate);
-                    await client.EmitAsync("real-time-update", realTimeUpdateJson);
+                    _ = serverComms.sendUpdate(realTimeUpdate);
                     lastUpdate = realTimeUpdate;
                 }
             });
@@ -151,22 +143,20 @@ namespace ACCTelemetrySharing
         /// ui callbacks
         private async void connectButton_Click(object sender, RoutedEventArgs e)
         {
-            if (client != null && client.Connected)
+            if (serverComms.isConnected)
             {
                 updateTimer.Stop();
 
-                await client.DisconnectAsync();
-                client.Dispose();
+                await serverComms.disconnect();
 
                 Trace.WriteLine("Disconnected!");
                 updateConnectButton(ConnectionState.DISCONNECTED);
             }
-            else if (client == null || client.Disconnected)
+            else
             {
                 updateConnectButton(ConnectionState.CONNECTING);
-                client = new SocketIO(API);
-                setupConnection();
-                _ = client.ConnectAsync();
+                await serverComms.connect();
+
                 Trace.WriteLine("Connecting...!");
             }
         }

@@ -8,6 +8,11 @@ using System.Threading.Tasks;
 
 namespace ACCTelemetrySharing
 {
+    public interface ACCEvent
+    {
+        string eventName { get; }
+    }
+
     struct UpdateFactory
     {
         public static RealTimeUpdate createRealTimeUpdate(
@@ -77,13 +82,13 @@ namespace ACCTelemetrySharing
             };
         }
 
-        public static OnNewLapUpdate createNewLapUpdate(
+        public static NewLapUpdate createNewLapUpdate(
             string shortName,
             LapUpdate lapUpdate,
             StintUpdate stintUpdate
             )
         {
-            return new OnNewLapUpdate()
+            return new NewLapUpdate()
             {
                 shortName = shortName,
                 averageTyreTemp = lapUpdate.averageTemps().rawData(),
@@ -92,11 +97,37 @@ namespace ACCTelemetrySharing
                 predictedPadWear = stintUpdate.predictedPadLife().rawData(),
             };
         }
+
+        public static PitInUpdate createPitInUpdate(
+            string shortName,
+            Graphics graphics
+            )
+        {
+            return new PitInUpdate()
+            {
+                shortName = shortName,
+                sessionTimeLeft = graphics.sessionTimeLeft,
+            };
+        }
+
+        public static PitOutUpdate createPitOutUpdate(
+            string shortName,
+            Graphics graphics
+            )
+        {
+            return new PitOutUpdate()
+            {
+                shortName = shortName,
+                sessionTimeLeft = graphics.sessionTimeLeft,
+            };
+        }
     }
 
     [Serializable]
-    class RealTimeUpdate
+    class RealTimeUpdate : ACCEvent
     {
+        public string eventName =>
+            "REAL_TIME_UPDATE";
         // origin
         public string shortName;
 
@@ -177,14 +208,34 @@ namespace ACCTelemetrySharing
     }
 
     [Serializable]
-    class OnNewLapUpdate
+    class NewLapUpdate : ACCEvent
     {
+        public string eventName =>
+            "NEW_LAP_UPDATE";
         public string shortName;
         public float[] averageTyreTemp;
         public float[] averageTyrePsi;
         public int stintAverageLapTimeMs;
         public float[] predictedPadWear;
 
+    }
+
+    [Serializable]
+    class PitInUpdate: ACCEvent
+    {
+        public string eventName =>
+            "PIT_IN_UPDATE";
+        public string shortName;
+        public float sessionTimeLeft;
+    }
+
+    [Serializable]
+    class PitOutUpdate: ACCEvent
+    {
+        public string eventName =>
+            "PIT_OUT_UPDATE";
+        public string shortName;
+        public float sessionTimeLeft;
     }
 
     //[Serializable]

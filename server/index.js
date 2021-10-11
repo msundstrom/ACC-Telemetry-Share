@@ -11,9 +11,21 @@ const io = new Server(server, {
         methods: ['GET', 'POST']
     }
 });
+const UpdateFactory = require('./updateFactory');
 
-var realTimeUpdate = { };
-var newLapUpdate = { };
+const EVENT_NAMES = {
+  REAL_TIME: 'REAL_TIME_UPDATE',  
+  NEW_LAP: 'NEW_LAP_UPDATE',
+  PIT_IN: 'PIT_IN_UPDATE',
+  PIT_OUT: 'PIT_OUT_UPDATE',
+};
+
+const LAST_UPDATES = {
+    REAL_TIME: null,
+    NEW_LAP: null,
+    PIT_IN: null,
+    PIT_OUT: null,
+};
 
 const dataSourceNameSpace = io.of("/data");
 const clientNameSpace = io.of('/view');
@@ -30,17 +42,34 @@ server.listen(3000, () => {
 dataSourceNameSpace.on('connection', (socket) => {  
     console.log('a data source connected');
 
-    
-    socket.on('real-time-update', (msg) => {
+    socket.on(EVENT_NAMES.REAL_TIME, (msg) => {
         console.log(`UPDATE: ${JSON.stringify(msg, null, 3)}`);
-        realTimeUpdate = msg;
-        clientNameSpace.emit('real-time-update', realTimeUpdate);
+        LAST_UPDATES.REAL_TIME = msg;
+
+        clientNameSpace.emit(EVENT_NAMES.REAL_TIME, realTimeUpdate);
     });
 
-    socket.on('new-lap-update', (msg) => {
+    socket.on(EVENT_NAMES.NEW_LAP, (msg) => {
         console.log(`NEW LAP UPDATE: ${JSON.stringify(msg, null, 3)}`);
-        newLapUpdate = msg;
-        clientNameSpace.emit('new-lap-update', newLapUpdate);
+        LAST_UPDATES.NEW_LAP = msg;
+
+        clientNameSpace.emit(EVENT_NAMES.NEW_LAP, newLapUpdate);
+    });
+
+    socket.on(EVENT_NAMES.PIT_IN, (msg) => {
+        console.log(`NEW LAP UPDATE: ${JSON.stringify(msg, null, 3)}`);
+        LAST_UPDATES.PIT_IN = msg;
+
+        clientNameSpace.emit(EVENT_NAMES.PIT_IN, newLapUpdate);
+    });
+
+    socket.on(EVENT_NAMES.PIT_OUT, (msg) => {
+        console.log(`NEW LAP UPDATE: ${JSON.stringify(msg, null, 3)}`);
+        LAST_UPDATES.PIT_OUT = msg;
+        
+        const pitStopUpdate = UpdateFactory.createPitUpdate(LAST_UPDATES.PIT_IN, LAST_UPDATES.PIT_OUT);
+
+        clientNameSpace.emit(EVENT_NAMES.PIT_OUT, pitStopUpdate);
     });
 
     socket.on('disconnect', () => {
