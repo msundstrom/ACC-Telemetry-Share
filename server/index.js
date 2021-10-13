@@ -14,10 +14,12 @@ const io = new Server(server, {
 const UpdateFactory = require('./updateFactory');
 
 const EVENT_NAMES = {
-  REAL_TIME: 'REAL_TIME_UPDATE',  
-  NEW_LAP: 'NEW_LAP_UPDATE',
-  PIT_IN: 'PIT_IN_UPDATE',
-  PIT_OUT: 'PIT_OUT_UPDATE',
+    ROOM_CONNECT: 'ROOM_CONNECT',
+    ROOM_CREATE: 'ROOM_CREATE',
+    REAL_TIME: 'REAL_TIME_UPDATE',  
+    NEW_LAP: 'NEW_LAP_UPDATE',
+    PIT_IN: 'PIT_IN_UPDATE',
+    PIT_OUT: 'PIT_OUT_UPDATE',
 };
 
 const LAST_UPDATES = {
@@ -29,6 +31,8 @@ const LAST_UPDATES = {
 
 const dataSourceNameSpace = io.of("/data");
 const clientNameSpace = io.of('/view');
+
+const ROOM_MAPPINGS = { };
 
 app.get('/', (req, res) => {  
     res.send('<h1>Hello world</h1>');
@@ -42,34 +46,42 @@ server.listen(3000, () => {
 dataSourceNameSpace.on('connection', (socket) => {  
     console.log('a data source connected');
 
+    socket.on(EVENT_NAMES.ROOM_CREATE, (msg) => {
+        ROOM_MAPPINGS[socket.id] = msg.roomName;
+    });
+
+    socket.on(EVENT_NAMES.ROOM_CONNECT, (msg) => {
+        ROOM_MAPPINGS[socket.id] = msg.roomName;
+    });
+
     socket.on(EVENT_NAMES.REAL_TIME, (msg) => {
-        console.log(`UPDATE: ${JSON.stringify(msg, null, 3)}`);
+        console.log(`${EVENT_NAMES.REAL_TIME}: ${JSON.stringify(msg, null, 3)}`);
         LAST_UPDATES.REAL_TIME = msg;
 
-        clientNameSpace.emit(EVENT_NAMES.REAL_TIME, realTimeUpdate);
+        clientNameSpace.to(ROOM_MAPPINGS[socket.id]).emit(EVENT_NAMES.REAL_TIME, realTimeUpdate);
     });
 
     socket.on(EVENT_NAMES.NEW_LAP, (msg) => {
-        console.log(`NEW LAP UPDATE: ${JSON.stringify(msg, null, 3)}`);
+        console.log(`${EVENT_NAMES.NEW_LAP}: ${JSON.stringify(msg, null, 3)}`);
         LAST_UPDATES.NEW_LAP = msg;
 
-        clientNameSpace.emit(EVENT_NAMES.NEW_LAP, newLapUpdate);
+        clientNameSpace.to(ROOM_MAPPINGS[socket.id]).emit(EVENT_NAMES.NEW_LAP, newLapUpdate);
     });
 
     socket.on(EVENT_NAMES.PIT_IN, (msg) => {
-        console.log(`NEW LAP UPDATE: ${JSON.stringify(msg, null, 3)}`);
+        console.log(`${EVENT_NAMES.PIT_IN}: ${JSON.stringify(msg, null, 3)}`);
         LAST_UPDATES.PIT_IN = msg;
 
-        clientNameSpace.emit(EVENT_NAMES.PIT_IN, newLapUpdate);
+        clientNameSpace.to(ROOM_MAPPINGS[socket.id]).emit(EVENT_NAMES.PIT_IN, newLapUpdate);
     });
 
     socket.on(EVENT_NAMES.PIT_OUT, (msg) => {
-        console.log(`NEW LAP UPDATE: ${JSON.stringify(msg, null, 3)}`);
+        console.log(`${EVENT_NAMES.PIT_OUT}: ${JSON.stringify(msg, null, 3)}`);
         LAST_UPDATES.PIT_OUT = msg;
         
         const pitStopUpdate = UpdateFactory.createPitUpdate(LAST_UPDATES.PIT_IN, LAST_UPDATES.PIT_OUT);
 
-        clientNameSpace.emit(EVENT_NAMES.PIT_OUT, pitStopUpdate);
+        clientNameSpace.to(ROOM_MAPPINGS[socket.id]).emit(EVENT_NAMES.PIT_OUT, pitStopUpdate);
     });
 
     socket.on('disconnect', () => {
@@ -80,6 +92,10 @@ dataSourceNameSpace.on('connection', (socket) => {
 // from server to web client
 clientNameSpace.on('connection', (socket) => {
     console.log('a web interface connected');
+
+    socket.on(EVENT_NAMES.ROOM_CONNECT, (msg) => {
+        socket.join(msg.roomName);
+    });
 
     socket.on('disconnect', () => {
         console.log('a web interface disconnected');
