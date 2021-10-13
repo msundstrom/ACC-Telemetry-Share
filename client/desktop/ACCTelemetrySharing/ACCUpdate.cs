@@ -122,6 +122,26 @@ namespace ACCTelemetrySharing
                 sessionTimeLeft = graphics.sessionTimeLeft,
             };
         }
+
+        public static RoomCreateUpdate createRoomCreateUpdate(
+            string shortName,
+            string roomName
+            ) {
+            return new RoomCreateUpdate() {
+                shortName = shortName,
+                roomName = roomName,
+            };
+        }
+
+        public static RoomConnectUpdate createRoomConnectUpdate(
+            string shortName,
+            string roomName
+            ) {
+            return new RoomConnectUpdate() {
+                shortName = shortName,
+                roomName = roomName,
+            };
+        }
     }
 
     [Serializable]
@@ -238,6 +258,22 @@ namespace ACCTelemetrySharing
             "PIT_OUT_UPDATE";
         public string shortName;
         public float sessionTimeLeft;
+    }
+
+    [Serializable]
+    class RoomCreateUpdate : ACCEvent {
+        public string eventName =>
+            "ROOM_CREATE";
+        public string shortName;
+        public string roomName;
+    }
+
+    [Serializable]
+    class RoomConnectUpdate: ACCEvent {
+        public string eventName =>
+            "ROOM_CONNECT";
+        public string shortName;
+        public string roomName;
     }
 
     //[Serializable]

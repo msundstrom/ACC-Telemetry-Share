@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Timers;
 using AssettoCorsaSharedMemory;
 using Newtonsoft.Json;
+using System.Text;
 
 namespace ACCTelemetrySharing
 {
@@ -28,6 +29,7 @@ namespace ACCTelemetrySharing
         private RealTimeUpdate lastUpdate;
         private LapUpdate currentLap;
         private StintUpdate currentStint;
+        private readonly Random _random = new Random();
 
         private ServerCommunicator serverComms = new ServerCommunicator();
 
@@ -155,10 +157,38 @@ namespace ACCTelemetrySharing
             else
             {
                 updateConnectButton(ConnectionState.CONNECTING);
-                await serverComms.connect();
 
+                if (joinRoom.IsChecked != null && (bool)joinRoom.IsChecked) {
+                    await serverComms.connect(UpdateFactory.createRoomConnectUpdate(shortName, roomName.Text));
+                } else {
+                    var generatedRoomName = randomString(5, true);
+                    this.Dispatcher.Invoke(() => {
+                        roomName.Text = generatedRoomName;
+                    });
+                    await serverComms.connect(UpdateFactory.createRoomCreateUpdate(shortName, generatedRoomName));
+                }
+                
                 Trace.WriteLine("Connecting...!");
             }
+        }
+        private string randomString(int size, bool lowerCase = false) {
+            var builder = new StringBuilder(size);
+
+            // Unicode/ASCII Letters are divided into two blocks
+            // (Letters 65–90 / 97–122):
+            // The first group containing the uppercase letters and
+            // the second group containing the lowercase.  
+
+            // char is a single Unicode character  
+            char offset = lowerCase ? 'a' : 'A';
+            const int lettersOffset = 26; // A...Z or a..z: length=26  
+
+            for (var i = 0; i < size; i++) {
+                var @char = (char)_random.Next(offset, offset + lettersOffset);
+                builder.Append(@char);
+            }
+
+            return lowerCase ? builder.ToString().ToLower() : builder.ToString();
         }
 
         private void shortNameTextBox_onChange(object sender, EventArgs e)

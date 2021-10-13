@@ -21,45 +21,51 @@ namespace ACCTelemetrySharing
 
         public SERVERSTATE state { get; private set; }
 
-        public bool isConnected
-        {
+        public bool isConnected {
             get
             {
                 return state == SERVERSTATE.CONNECTED;
             }
         }
 
-        public ServerCommunicator()
-        {
+        public ServerCommunicator() {
             state = SERVERSTATE.DISCONNECTED;
         }
 
-        public async Task connect()
-        {
+        public async Task connect(RoomConnectUpdate roomConnectUpdate) {
+            await private_connect(() => {
+                client.EmitAsync(roomConnectUpdate.eventName, JsonConvert.SerializeObject(roomConnectUpdate));
+            });
+        }
+
+        public async Task connect(RoomCreateUpdate roomCreateUpdate) {
+            await private_connect(() => {
+                client.EmitAsync(roomCreateUpdate.eventName, JsonConvert.SerializeObject(roomCreateUpdate));
+            });
+        }
+
+        private async Task private_connect(Action onConnect) {
             client = new SocketIO(API);
-            
-            client.OnConnected += (sender, e) =>
-            {
+
+            client.OnConnected += (sender, e) => {
                 state = SERVERSTATE.CONNECTED;
+                onConnect();
             };
 
-            client.OnDisconnected += (sender, e) =>
-            {
+            client.OnDisconnected += (sender, e) => {
                 state = SERVERSTATE.DISCONNECTED;
             };
 
             await client.ConnectAsync();
         }
 
-        public async Task disconnect()
-        {
+        public async Task disconnect() {
             state = SERVERSTATE.DISCONNECTED;
             await client.DisconnectAsync();
             client.Dispose();
         }
 
-        public async Task sendUpdate(ACCEvent accEvent) 
-        {
+        public async Task sendUpdate(ACCEvent accEvent) {
             var updateJson = JsonConvert.SerializeObject(accEvent);
             await client.EmitAsync(accEvent.eventName, updateJson);
         }

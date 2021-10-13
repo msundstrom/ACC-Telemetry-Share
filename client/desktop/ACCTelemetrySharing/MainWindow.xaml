@@ -18,9 +18,9 @@
             </StackPanel>
             <Label Content="Short name" Margin="5,5,0,0" Height="24" HorizontalAlignment="Left" VerticalAlignment="Top"/>
             <TextBox x:Name="shortNameTextBox" Margin="10,0,0,0" TextChanged="shortNameTextBox_onChange" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="50" MaxLength="3" CharacterCasing="Upper"/>
-            <RadioButton Margin="10,10,0,0" x:Name="createServer" GroupName="CREATE_OR_JOIN" IsChecked="True">Create server</RadioButton>
-            <RadioButton Margin="10,5,0,0" x:Name="joinServer" GroupName="CREATE_OR_JOIN">Join server</RadioButton>
-            <TextBox Margin="10,5,0,0" x:Name="ServerName" IsEnabled="{Binding IsChecked, ElementName=joinServer}" Height="24" VerticalAlignment="Top" HorizontalAlignment="Left" Width="140"></TextBox>
+            <RadioButton Margin="10,10,0,0" x:Name="createRoom" GroupName="CREATE_OR_JOIN" IsChecked="True">Create room</RadioButton>
+            <RadioButton Margin="10,5,0,0" x:Name="joinRoom" GroupName="CREATE_OR_JOIN">Join room</RadioButton>
+            <TextBox Margin="10,5,0,0" x:Name="roomName" IsReadOnly="{Binding IsChecked, ElementName=createRoom}" Height="24" VerticalAlignment="Top" HorizontalAlignment="Left" Width="140" IsInactiveSelectionHighlightEnabled="True"></TextBox>
             <Button Margin="10,10,0,0" x:Name="connectButton" Click="connectButton_Click" Width="140" Height="50" Content="Connect" HorizontalAlignment="Left" VerticalAlignment="Top"/>
         </StackPanel>
         
