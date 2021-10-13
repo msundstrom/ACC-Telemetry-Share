@@ -65,6 +65,7 @@ namespace ACCTelemetrySharing
                 lightsStage = graphics.lightsStage,
                 directionLightsLeft = graphics.directionLightsLeft,
                 directionLightsRight = graphics.directionLightsRight,
+                engineMap = graphics.EngineMap,
                 mfdTyreSet = graphics.mfdTyreSet,
                 mfdFuelToAdd = graphics.mfdFuelToAdd,
                 mfdTyrePressureLF = graphics.mfdTyrePressureLF,
@@ -184,6 +185,7 @@ namespace ACCTelemetrySharing
         public int lightsStage;
         public int directionLightsLeft;
         public int directionLightsRight;
+        public int engineMap;
 
         // MFD
         public int mfdTyreSet;
