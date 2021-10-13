@@ -5,14 +5,24 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ACCTelemetrySharing"
         mc:Ignorable="d"
-        Title="MainWindow" Height="200" Width="185" ResizeMode="NoResize">
+        Title="MainWindow" Height="275" Width="185" ResizeMode="NoResize">
     <Grid>
-        <Label Margin="10,-130,0,0" Content="ACC Status" Height="24" HorizontalAlignment="Left"/>
-        <Label x:Name="connectionStatus" Margin="80,-130,0,0" Content="off" Height="24" HorizontalAlignment="Left"/>
-        <Label Margin="10,-100,0,0" Content="Server Status" Height="24" HorizontalAlignment="Left"/>
-        <Label x:Name="serverStatus" Margin="90,-100,0,0" Content="off" Height="24" HorizontalAlignment="Left"/>
-        <Label Content="Short name" Margin="10,-40,0,0" Height="24" HorizontalAlignment="Left"/>
-        <TextBox x:Name="shortNameTextBox" Margin="10,70,0,0" TextChanged="shortNameTextBox_onChange" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="120" MaxLength="3" CharacterCasing="Upper"/>
-        <Button x:Name="connectButton" Click="connectButton_Click" Margin="10,90,0,0" Width="150" Height="50" Content="Connect" HorizontalAlignment="Left"/>
+        <StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="5,0,0,0">
+                <Label Content="ACC Status" Height="24" HorizontalAlignment="Left" VerticalAlignment="Top" Width="Auto"/>
+                <Label x:Name="connectionStatus" Content="off" Height="24" HorizontalAlignment="Left"  VerticalAlignment="Top"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="5,0,0,0">
+                <Label Content="Server Status" Height="24" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <Label x:Name="serverStatus" Content="off" Height="24" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+            </StackPanel>
+            <Label Content="Short name" Margin="5,5,0,0" Height="24" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+            <TextBox x:Name="shortNameTextBox" Margin="10,0,0,0" TextChanged="shortNameTextBox_onChange" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="50" MaxLength="3" CharacterCasing="Upper"/>
+            <RadioButton Margin="10,10,0,0" x:Name="createServer" GroupName="CREATE_OR_JOIN" IsChecked="True">Create server</RadioButton>
+            <RadioButton Margin="10,5,0,0" x:Name="joinServer" GroupName="CREATE_OR_JOIN">Join server</RadioButton>
+            <TextBox Margin="10,5,0,0" x:Name="ServerName" IsEnabled="{Binding IsChecked, ElementName=joinServer}" Height="24" VerticalAlignment="Top" HorizontalAlignment="Left" Width="140"></TextBox>
+            <Button Margin="10,10,0,0" x:Name="connectButton" Click="connectButton_Click" Width="140" Height="50" Content="Connect" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        </StackPanel>
+        
     </Grid>
 </Window>
