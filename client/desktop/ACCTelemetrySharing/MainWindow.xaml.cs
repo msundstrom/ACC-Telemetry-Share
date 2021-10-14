@@ -27,8 +27,8 @@ namespace ACCTelemetrySharing
         private string shortName { get; set; }
 
         private RealTimeUpdate lastUpdate;
-        private LapUpdate currentLap;
-        private StintUpdate currentStint;
+        private LapUpdate currentLap = new LapUpdate(-1);
+        private StintUpdate currentStint = new StintUpdate();
         private readonly Random _random = new Random();
 
         private ServerCommunicator serverComms = new ServerCommunicator();
@@ -105,7 +105,9 @@ namespace ACCTelemetrySharing
                     var physics = sharedMemoryReader.ReadPhysics();
                     var staticInfo = sharedMemoryReader.ReadStaticInfo();
 
-                    if (lastUpdate.completedLaps < graphics.completedLaps)
+                    Trace.WriteLine("packet ID: " + graphics.PacketId);
+
+                    if (lastUpdate != null && lastUpdate.completedLaps < graphics.completedLaps)
                     {
                         // update stint
                         currentStint.update(graphics, physics, staticInfo);
@@ -117,12 +119,12 @@ namespace ACCTelemetrySharing
                         currentLap = new LapUpdate(graphics.completedLaps);
                     }
                     // pit in
-                    if (lastUpdate.isInPitLane == 0 && graphics.isInPitLane == 1) {
+                    if (lastUpdate != null && lastUpdate.isInPitLane == 0 && graphics.isInPitLane == 1) {
                         _ = serverComms.sendUpdate(UpdateFactory.createPitInUpdate(shortName, graphics));
                     }
 
                     // pit out
-                    if (lastUpdate.isInPitLane == 1 && graphics.isInPitLane == 0)
+                    if (lastUpdate != null && lastUpdate.isInPitLane == 1 && graphics.isInPitLane == 0)
                     {
                         _ = serverComms.sendUpdate(UpdateFactory.createPitOutUpdate(shortName, graphics));
                     }
@@ -175,7 +177,7 @@ namespace ACCTelemetrySharing
                         Trace.WriteLine("Connected");
                     });
                 }
-                
+
                 Trace.WriteLine("Connecting...!");
             }
         }
