@@ -32,15 +32,17 @@ namespace ACCTelemetrySharing
             state = SERVERSTATE.DISCONNECTED;
         }
 
-        public async Task connect(RoomConnectUpdate roomConnectUpdate) {
+        public async Task connect(RoomConnectUpdate roomConnectUpdate, Action onConnect) {
             await private_connect(() => {
                 client.EmitAsync(roomConnectUpdate.eventName, JsonConvert.SerializeObject(roomConnectUpdate));
+                onConnect();
             });
         }
 
-        public async Task connect(RoomCreateUpdate roomCreateUpdate) {
+        public async Task connect(RoomCreateUpdate roomCreateUpdate, Action onConnect) {
             await private_connect(() => {
                 client.EmitAsync(roomCreateUpdate.eventName, JsonConvert.SerializeObject(roomCreateUpdate));
+                onConnect();
             });
         }
 

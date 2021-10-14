@@ -159,13 +159,21 @@ namespace ACCTelemetrySharing
                 updateConnectButton(ConnectionState.CONNECTING);
 
                 if (joinRoom.IsChecked != null && (bool)joinRoom.IsChecked) {
-                    await serverComms.connect(UpdateFactory.createRoomConnectUpdate(shortName, roomName.Text));
+                    await serverComms.connect(UpdateFactory.createRoomConnectUpdate(shortName, roomName.Text), () => {
+                        updateConnectButton(ConnectionState.CONNECTED);
+                        updateTimer.Start();
+                        Trace.WriteLine("Connected");
+                    });
                 } else {
                     var generatedRoomName = randomString(5, true);
                     this.Dispatcher.Invoke(() => {
                         roomName.Text = generatedRoomName;
                     });
-                    await serverComms.connect(UpdateFactory.createRoomCreateUpdate(shortName, generatedRoomName));
+                    await serverComms.connect(UpdateFactory.createRoomCreateUpdate(shortName, generatedRoomName), () => {
+                        updateConnectButton(ConnectionState.CONNECTED);
+                        updateTimer.Start();
+                        Trace.WriteLine("Connected");
+                    });
                 }
                 
                 Trace.WriteLine("Connecting...!");
