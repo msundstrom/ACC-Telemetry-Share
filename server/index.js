@@ -58,21 +58,21 @@ dataSourceNameSpace.on('connection', (socket) => {
         console.log(`${EVENT_NAMES.REAL_TIME}: ${JSON.stringify(msg, null, 3)}`);
         LAST_UPDATES.REAL_TIME = msg;
 
-        clientNameSpace.to(ROOM_MAPPINGS[socket.id]).emit(EVENT_NAMES.REAL_TIME, realTimeUpdate);
+        clientNameSpace.to(ROOM_MAPPINGS[socket.id]).emit(EVENT_NAMES.REAL_TIME, msg);
     });
 
     socket.on(EVENT_NAMES.NEW_LAP, (msg) => {
         console.log(`${EVENT_NAMES.NEW_LAP}: ${JSON.stringify(msg, null, 3)}`);
         LAST_UPDATES.NEW_LAP = msg;
 
-        clientNameSpace.to(ROOM_MAPPINGS[socket.id]).emit(EVENT_NAMES.NEW_LAP, newLapUpdate);
+        clientNameSpace.to(ROOM_MAPPINGS[socket.id]).emit(EVENT_NAMES.NEW_LAP, msg);
     });
 
     socket.on(EVENT_NAMES.PIT_IN, (msg) => {
         console.log(`${EVENT_NAMES.PIT_IN}: ${JSON.stringify(msg, null, 3)}`);
         LAST_UPDATES.PIT_IN = msg;
 
-        clientNameSpace.to(ROOM_MAPPINGS[socket.id]).emit(EVENT_NAMES.PIT_IN, newLapUpdate);
+        clientNameSpace.to(ROOM_MAPPINGS[socket.id]).emit(EVENT_NAMES.PIT_IN, msg);
     });
 
     socket.on(EVENT_NAMES.PIT_OUT, (msg) => {
@@ -80,7 +80,6 @@ dataSourceNameSpace.on('connection', (socket) => {
         LAST_UPDATES.PIT_OUT = msg;
         
         const pitStopUpdate = UpdateFactory.createPitUpdate(LAST_UPDATES.PIT_IN, LAST_UPDATES.PIT_OUT);
-
         clientNameSpace.to(ROOM_MAPPINGS[socket.id]).emit(EVENT_NAMES.PIT_OUT, pitStopUpdate);
     });
 
