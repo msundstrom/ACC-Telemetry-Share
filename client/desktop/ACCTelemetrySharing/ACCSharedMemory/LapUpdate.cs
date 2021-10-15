@@ -13,24 +13,28 @@ namespace ACCTelemetrySharing
             public double RL;
             public double RR;
 
-            public Wheels(double frontRight, double frontLeft, double rearLeft, double rearRight)
-            {
+            public Wheels(double value) {
+                FR = value;
+                FL = value;
+                RL = value;
+                RR = value;
+            }
+
+            public Wheels(double frontRight, double frontLeft, double rearLeft, double rearRight) {
                 FR = frontRight;
                 FL = frontLeft;
                 RL = rearLeft;
                 RR = rearRight;
             }
 
-            public Wheels(float[] wheels) 
-            {
+            public Wheels(float[] wheels) {
                 FR = wheels[0];
                 FL = wheels[1];
                 RL = wheels[2];
                 RR = wheels[3];
             }
 
-            public float[] rawData()
-            {
+            public float[] rawData() {
                 return new float[] { (float)FR, (float)FL, (float)RL, (float)RR };
             }
         }
@@ -40,19 +44,20 @@ namespace ACCTelemetrySharing
         public List<Wheels> tyrePressures = new List<Wheels>();
         public List<Wheels> tyreTemperatures = new List<Wheels>();
 
-        public LapUpdate(int lap)
-        {
+        public LapUpdate(int lap) {
             this.lap = lap;
         }
 
-        public void update(Graphics graphics, Physics physics, StaticInfo staticInfo)
-        {
+        public void update(Graphics graphics, Physics physics, StaticInfo staticInfo) {
             tyrePressures.Add(new Wheels(physics.WheelsPressure));
             tyreTemperatures.Add(new Wheels(physics.tyreTemp));
         }
 
-        public Wheels maxPressures()
-        {
+        public Wheels maxPressures() {
+            if (tyrePressures.Count == 0) {
+                return new Wheels(-1);
+            }
+
             double flMax = tyrePressures.Select(wheel => wheel.FL).ToArray().Max();
             double frMax = tyrePressures.Select(wheel => wheel.FR).ToArray().Max();
             double rlMax = tyrePressures.Select(wheel => wheel.RL).ToArray().Max();
@@ -61,8 +66,11 @@ namespace ACCTelemetrySharing
             return new Wheels(flMax, frMax, rlMax, rrMax);
         }
 
-        public Wheels averagePressures()
-        {
+        public Wheels averagePressures() {
+            if (tyrePressures.Count == 0) {
+                return new Wheels(-1);
+            }
+
             double flAvg = tyrePressures.Select(wheel => wheel.FL).ToArray().Average();
             double frAvg = tyrePressures.Select(wheel => wheel.FR).ToArray().Average();
             double rlAvg = tyrePressures.Select(wheel => wheel.RL).ToArray().Average();
@@ -71,8 +79,11 @@ namespace ACCTelemetrySharing
             return new Wheels(flAvg, frAvg, rlAvg, rrAvg);
         }
 
-        public Wheels maxTemps()
-        {
+        public Wheels maxTemps() {
+            if (tyreTemperatures.Count == 0) {
+                return new Wheels(-1);
+            }
+
             double flMax = tyreTemperatures.Select(wheel => wheel.FL).ToArray().Max();
             double frMax = tyreTemperatures.Select(wheel => wheel.FR).ToArray().Max();
             double rlMax = tyreTemperatures.Select(wheel => wheel.RL).ToArray().Max();
@@ -81,8 +92,11 @@ namespace ACCTelemetrySharing
             return new Wheels(flMax, frMax, rlMax, rrMax);
         }
 
-        public Wheels averageTemps()
-        {
+        public Wheels averageTemps() {
+            if (tyreTemperatures.Count == 0) {
+                return new Wheels(-1);
+            }
+
             double flAvg = tyreTemperatures.Select(wheel => wheel.FL).ToArray().Average();
             double frAvg = tyreTemperatures.Select(wheel => wheel.FR).ToArray().Average();
             double rlAvg = tyreTemperatures.Select(wheel => wheel.RL).ToArray().Average();

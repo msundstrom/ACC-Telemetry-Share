@@ -49,7 +49,7 @@ namespace ACCTelemetrySharing
 
         private TimeSpan? averageLaptime()
         {
-            if (lapTimes.Count < 1)
+            if (lapTimes.Count <= 1)
             {
                 return null;
             }
@@ -88,6 +88,10 @@ namespace ACCTelemetrySharing
 
         public LapUpdate.Wheels averageBrakeDiscWear()
         {
+            if (brakeDiscWear.Count() == 0) {
+                return new LapUpdate.Wheels(-1);
+            }
+
             LapUpdate.Wheels totalWear = new LapUpdate.Wheels();
 
             int snapshotCount = brakeDiscWear.Count() - 1;
@@ -111,6 +115,10 @@ namespace ACCTelemetrySharing
         public LapUpdate.Wheels predictedPadLife()
         {
             LapUpdate.Wheels averagePadWear = averageBrakePadWear();
+            if (averagePadWear.FL == -1) {
+                return averagePadWear;
+            }
+
             double padPredicatedLifeFL = (brakePadWear.Last().FL - padCriticalValue) / averagePadWear.FL * averageLapTimeMs();
             double padPredicatedLifeFR = (brakePadWear.Last().FR - padCriticalValue) / averagePadWear.FR * averageLapTimeMs();
             double padPredicatedLifeRL = (brakePadWear.Last().RL - padCriticalValue) / averagePadWear.RL * averageLapTimeMs();
@@ -126,6 +134,10 @@ namespace ACCTelemetrySharing
 
         public LapUpdate.Wheels averageBrakePadWear()
         {
+            if (brakePadWear.Count() == 0) {
+                return new LapUpdate.Wheels(-1);
+            }
+
             LapUpdate.Wheels totalWear = new LapUpdate.Wheels();
 
             int snapshotCount = brakePadWear.Count() - 1;

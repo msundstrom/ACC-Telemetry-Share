@@ -1,4 +1,4 @@
-export const UpdateFactory = {
+const UpdateFactory = {
     createPitUpdate: (pitInUpdate, pitOutUpdate) => {
         return {
             previousDriver: pitInUpdate.shortName,

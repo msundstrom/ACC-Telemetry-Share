@@ -335,6 +335,8 @@ namespace AssettoCorsaSharedMemory
                     var bytes = reader.ReadBytes(size);
                     var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
                     var data = (Graphics)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(Graphics));
+
+                    Trace.WriteLine("Status: "+ data.Status);
                     handle.Free();
                     return data;
                 }
