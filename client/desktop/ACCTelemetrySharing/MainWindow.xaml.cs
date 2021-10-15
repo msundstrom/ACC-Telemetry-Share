@@ -30,11 +30,11 @@ namespace ACCTelemetrySharing
         private LapUpdate currentLap = new LapUpdate(-1);
         private StintUpdate currentStint = new StintUpdate();
         private readonly Random _random = new Random();
+        private int lastGraphicsPacketId = -1;
 
         private ServerCommunicator serverComms = new ServerCommunicator();
 
-        public MainWindow()
-        {
+        public MainWindow() {
             InitializeComponent();
 
             updateTimer.Elapsed += new ElapsedEventHandler(sendUpdate);
@@ -49,8 +49,7 @@ namespace ACCTelemetrySharing
             connectButton.IsEnabled = false;
         }
 
-        void connectionStatusChanged(object sender, ConnectionStatusEventArgs e)
-        {
+        void connectionStatusChanged(object sender, ConnectionStatusEventArgs e) {
             var newContent = "";
             if (e.connectionStatus == ACC_CONNECTION_STATUS.CONNECTED)
             {
@@ -67,13 +66,7 @@ namespace ACCTelemetrySharing
             });
         }
 
-        private void setupConnection()
-        {
-            
-        }
-
-        private void updateConnectButton(ConnectionState state)
-        {
+        private void updateConnectButton(ConnectionState state) {
             this.Dispatcher.Invoke(() =>
             {
                 switch (state)
@@ -95,58 +88,75 @@ namespace ACCTelemetrySharing
             });
         }
 
-        private void sendUpdate(object sender, EventArgs e)
-        {
-            this.Dispatcher.Invoke(() =>
+        private void sendUpdate(object sender, EventArgs e) {
+            
+            if (sharedMemoryReader.IsRunning)
             {
-                if (sharedMemoryReader.IsRunning)
-                {
-                    var graphics = sharedMemoryReader.ReadGraphics();
-                    var physics = sharedMemoryReader.ReadPhysics();
-                    var staticInfo = sharedMemoryReader.ReadStaticInfo();
+                var graphics = sharedMemoryReader.ReadGraphics();
+                var physics = sharedMemoryReader.ReadPhysics();
+                var staticInfo = sharedMemoryReader.ReadStaticInfo();
 
-                    Trace.WriteLine("packet ID: " + graphics.PacketId);
+                Trace.WriteLine("ACtiveCars: " + graphics.ActiveCars);
 
-                    if (lastUpdate != null && lastUpdate.completedLaps < graphics.completedLaps)
-                    {
-                        // update stint
-                        currentStint.update(graphics, physics, staticInfo);
-                        var newLapUpdate = UpdateFactory.createNewLapUpdate(shortName, currentLap, currentStint);
-
-                        _ = serverComms.sendUpdate(newLapUpdate);
-
-                        // new lap
-                        currentLap = new LapUpdate(graphics.completedLaps);
-                    }
-                    // pit in
-                    if (lastUpdate != null && lastUpdate.isInPitLane == 0 && graphics.isInPitLane == 1) {
-                        _ = serverComms.sendUpdate(UpdateFactory.createPitInUpdate(shortName, graphics));
-                    }
-
-                    // pit out
-                    if (lastUpdate != null && lastUpdate.isInPitLane == 1 && graphics.isInPitLane == 0)
-                    {
-                        _ = serverComms.sendUpdate(UpdateFactory.createPitOutUpdate(shortName, graphics));
-                    }
-
-                    currentLap.update(graphics, physics, staticInfo);
-                    
-                    var realTimeUpdate = UpdateFactory.createRealTimeUpdate(
-                        shortName, 
-                        graphics, 
-                        physics, 
-                        staticInfo
-                    );
-
-                    _ = serverComms.sendUpdate(realTimeUpdate);
-                    lastUpdate = realTimeUpdate;
+                // naive check to see if we are actually driving
+                if (lastGraphicsPacketId == graphics.PacketId) {
+                    lastUpdate = null;
+                    currentLap = new LapUpdate(0);
+                    return;
                 }
-            });
+
+                // naive check to see if we have disconnected
+                if (graphics.ActiveCars == 0) {
+                    lastUpdate = null;
+                    currentLap = new LapUpdate(0);
+                    return;
+                }
+
+                if (lastUpdate != null && lastUpdate.completedLaps < graphics.completedLaps) {
+                    // update stint
+                    currentStint.update(graphics, physics, staticInfo);
+                    var newLapUpdate = UpdateFactory.createNewLapUpdate(shortName, currentLap, currentStint);
+
+                    _ = serverComms.sendUpdate(newLapUpdate);
+
+                    // new lap
+                    currentLap = new LapUpdate(graphics.completedLaps);
+                }
+                // pit in
+                if (lastUpdate != null && lastUpdate.isInPitLane == 0 && graphics.isInPitLane == 1) {
+                    Trace.WriteLine("Sending pit in update!");
+                    _ = serverComms.sendUpdate(UpdateFactory.createPitInUpdate(shortName, graphics));
+                }
+
+                // pit out
+                if (lastUpdate != null && lastUpdate.isInPitLane == 1 && graphics.isInPitLane == 0) {
+                    Trace.WriteLine("Sending pit out update!");
+                    _ = serverComms.sendUpdate(UpdateFactory.createPitOutUpdate(shortName, graphics));
+                }
+
+                currentLap.update(graphics, physics, staticInfo);
+
+                var realTimeUpdate = UpdateFactory.createRealTimeUpdate(
+                    shortName,
+                    graphics,
+                    physics,
+                    staticInfo
+                );
+
+                // don't send the first update, to avoid overlaps with the previous driver
+                if (lastUpdate == null) {
+                    lastUpdate = realTimeUpdate;
+                    return;
+                }
+
+                _ = serverComms.sendUpdate(realTimeUpdate);
+                lastUpdate = realTimeUpdate;
+            }
+            
         }
 
         /// ui callbacks
-        private async void connectButton_Click(object sender, RoutedEventArgs e)
-        {
+        private async void connectButton_Click(object sender, RoutedEventArgs e) {
             if (serverComms.isConnected)
             {
                 updateTimer.Stop();
@@ -181,6 +191,7 @@ namespace ACCTelemetrySharing
                 Trace.WriteLine("Connecting...!");
             }
         }
+
         private string randomString(int size, bool lowerCase = false) {
             var builder = new StringBuilder(size);
 
