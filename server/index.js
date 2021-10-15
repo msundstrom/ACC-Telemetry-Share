@@ -47,11 +47,15 @@ dataSourceNameSpace.on('connection', (socket) => {
     console.log('a data source connected');
 
     socket.on(EVENT_NAMES.ROOM_CREATE, (msg) => {
-        ROOM_MAPPINGS[socket.id] = msg.roomName;
+        contract = JSON.parse(msg);
+        console.log(`a data source created room: ${contract.roomName}`);
+        ROOM_MAPPINGS[socket.id] = contract.roomName;
     });
 
     socket.on(EVENT_NAMES.ROOM_CONNECT, (msg) => {
-        ROOM_MAPPINGS[socket.id] = msg.roomName;
+        contract = JSON.parse(msg);
+        console.log(`a data source joined room: ${contract.roomName}`);
+        ROOM_MAPPINGS[socket.id] = contract.roomName;
     });
 
     socket.on(EVENT_NAMES.REAL_TIME, (msg) => {
@@ -93,7 +97,9 @@ clientNameSpace.on('connection', (socket) => {
     console.log('a web interface connected');
 
     socket.on(EVENT_NAMES.ROOM_CONNECT, (msg) => {
-        socket.join(msg.roomName);
+        contract = JSON.parse(msg);
+        console.log(`a web interface joined room: ${contract.roomName}`);
+        socket.join(contract.roomName);
     });
 
     socket.on('disconnect', () => {
