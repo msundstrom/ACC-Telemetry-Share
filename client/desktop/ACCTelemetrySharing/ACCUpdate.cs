@@ -25,6 +25,7 @@ namespace ACCTelemetrySharing
             return new RealTimeUpdate()
             {
                 shortName = shortName,
+                CarModel = staticInfo.CarModel,
                 iCurrentTime = graphics.iCurrentTime,
                 iLastTime = graphics.iLastTime,
                 iBestTime = graphics.iBestTime,
@@ -34,6 +35,7 @@ namespace ACCTelemetrySharing
                 isValidLap = graphics.isValidLap,
                 DriverStintTotalTimeLeft = graphics.DriverStintTotalTimeLeft,
                 DriverStintTimeLeft = graphics.DriverStintTimeLeft,
+                Clock = graphics.Clock,
                 GlobalYellow = graphics.GlobalYellow,
                 GlobalYellow1 = graphics.GlobalYellow1,
                 GlobalYellow2 = graphics.GlobalYellow2,
@@ -42,6 +44,7 @@ namespace ACCTelemetrySharing
                 GlobalGreen = graphics.GlobalGreen,
                 GlobalChequered = graphics.GlobalChequered,
                 GlobalRed = graphics.GlobalRed,
+                FlagType = graphics.flag,
                 fuelEstimatedLaps = graphics.fuelEstimatedLaps,
                 Fuel = physics.Fuel,
                 fuelXLap = graphics.fuelXLap,
@@ -52,17 +55,24 @@ namespace ACCTelemetrySharing
                 TyreCompound = graphics.TyreCompound,
                 BrakeTemp = physics.BrakeTemp,
                 tyreTemp = physics.tyreTemp,
+                tyrePressure = physics.WheelsPressure,
                 padLife = physics.padLife,
                 discLife = physics.discLife,
                 trackGripStatus = graphics.trackGripStatus,
                 rainIntensity = graphics.rainIntensity,
                 rainIntensityIn10min = graphics.rainIntensityIn10min,
                 rainIntensityIn30min = graphics.rainIntensityIn30min,
+                windSpeed = graphics.windSpeed,
+                AirTemp = physics.AirTemp,
+                RoadTemp = physics.RoadTemp,
                 TC = graphics.TC,
                 TCCut = graphics.TCCut,
                 Abs = graphics.ABS,
                 BrakeBias = physics.BrakeBias,
+                EngineMap = graphics.EngineMap,
+                IgnitionOn = physics.ignitionOn,
                 lightsStage = graphics.lightsStage,
+                rainLights = graphics.rainLights,
                 directionLightsLeft = graphics.directionLightsLeft,
                 directionLightsRight = graphics.directionLightsRight,
                 engineMap = graphics.EngineMap,
@@ -80,6 +90,7 @@ namespace ACCTelemetrySharing
                 isInPitLane = graphics.isInPitLane,
                 isInPit = graphics.isInPit,
                 completedLaps = graphics.completedLaps,
+                CarCoordinates = TransformCarCoordinates(graphics.CarCoordinates, staticInfo.NumCars)
             };
         }
 
@@ -142,6 +153,22 @@ namespace ACCTelemetrySharing
                 roomName = roomName,
             };
         }
+
+        public static float[,] TransformCarCoordinates(float[] flatCoordinates, int numberOfCars)
+        {
+
+            var coordinates = new float[numberOfCars, 3];
+
+            for (var i = 0; i < numberOfCars; i += 3)
+            {
+                for (var j = 0; j < 3; j++)
+                {
+                    coordinates[i, j] = flatCoordinates[i + j];
+                }
+            }
+
+            return coordinates;
+        }
     }
 
     [Serializable]
@@ -151,6 +178,7 @@ namespace ACCTelemetrySharing
             "REAL_TIME_UPDATE";
         // origin
         public string shortName;
+        public string CarModel;
 
         // times
         public int iCurrentTime;
@@ -162,6 +190,7 @@ namespace ACCTelemetrySharing
         public int isValidLap;
         public int DriverStintTotalTimeLeft;
         public int DriverStintTimeLeft;
+        public float Clock;
 
         // flags
         public int GlobalYellow;
@@ -172,7 +201,8 @@ namespace ACCTelemetrySharing
         public int GlobalGreen;
         public int GlobalChequered;
         public int GlobalRed;
-        
+        public AC_FLAG_TYPE FlagType;
+
         // fuel
         public float fuelEstimatedLaps;
         public float Fuel;
@@ -190,19 +220,26 @@ namespace ACCTelemetrySharing
         public float[] tyreTemp;
         public float[] padLife;
         public float[] discLife;
+        public float[] tyrePressure;
 
         // weather & track
         public ACC_TRACK_GRIP_STATUS trackGripStatus;
         public ACC_RAIN_INTENSITY rainIntensity;
         public ACC_RAIN_INTENSITY rainIntensityIn10min;
         public ACC_RAIN_INTENSITY rainIntensityIn30min;
+        public float windSpeed;
+        public float AirTemp;
+        public float RoadTemp;
 
         // electronics
         public int TC;
         public int TCCut;
         public int Abs;
         public float BrakeBias;
+        public int EngineMap;
+        public int IgnitionOn;
         public int lightsStage;
+        public int rainLights;
         public int directionLightsLeft;
         public int directionLightsRight;
         public int engineMap;
@@ -226,7 +263,7 @@ namespace ACCTelemetrySharing
         public int isInPitLane;
         public int isInPit;
         public int completedLaps;
-        //public float[] CarCoordinates;
+        public float[,] CarCoordinates;
     }
 
     [Serializable]
